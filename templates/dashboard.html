@@ -1,0 +1,935 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Stock Market ML Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+            <div class="brand-icon">📈</div>
+            <div>
+                <h2>Stock ML</h2>
+                <p>Market Dashboard</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="#top" class="nav-item active">
+                <span>📊</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="#stock-details" class="nav-item">
+                <span>📈</span>
+                <span>Stock Details</span>
+            </a>
+
+            <a href="#price-chart-section" class="nav-item">
+                <span>📉</span>
+                <span>Price Analysis</span>
+            </a>
+
+            <a href="#volume-chart-section" class="nav-item">
+                <span>📊</span>
+                <span>Volume Analysis</span>
+            </a>
+
+            <a href="#ml-prediction-section" class="nav-item">
+                <span>🤖</span>
+                <span>ML Prediction</span>
+            </a>
+
+            <a href="#decision-support-section" class="nav-item">
+                <span>🧠</span>
+                <span>Decision Support</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <p>Machine Learning Project</p>
+            <small>Vietnam Stock Market</small>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="top">
+
+        <!-- HEADER -->
+        <header class="dashboard-header">
+
+            <div class="header-title">
+                <h1>Stock Market Dashboard</h1>
+
+                <p>
+                    Phân tích dữ liệu và hỗ trợ quyết định
+                    thị trường chứng khoán Việt Nam
+                </p>
+            </div>
+
+            <div class="header-controls">
+
+                <label for="stockSelect">
+                    Mã cổ phiếu
+                </label>
+
+                <select id="stockSelect">
+
+                    {% for stock in stocks %}
+
+                    <option value="{{ stock }}"
+                        {% if stock == selected_stock %}selected{% endif %}>
+                        {{ stock }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </header>
+
+
+        <!-- KPI OVERVIEW -->
+        <section class="kpi-grid">
+
+            <div class="kpi-card">
+
+                <div class="kpi-icon blue">
+                    📁
+                </div>
+
+                <div class="kpi-info">
+                    <p>Tổng số bản ghi</p>
+
+                    <h2 id="totalRecords">
+                        {{ summary.total_records | default(0) }}
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div class="kpi-card">
+
+                <div class="kpi-icon purple">
+                    🏢
+                </div>
+
+                <div class="kpi-info">
+                    <p>Số mã cổ phiếu</p>
+
+                    <h2 id="totalStocks">
+                        {{ summary.total_stocks | default(0) }}
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div class="kpi-card">
+
+                <div class="kpi-icon green">
+                    📅
+                </div>
+
+                <div class="kpi-info">
+                    <p>Ngày bắt đầu dữ liệu</p>
+
+                    <h2 id="startDate">
+                        {{ summary.start_date | default("--") }}
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div class="kpi-card">
+
+                <div class="kpi-icon orange">
+                    📆
+                </div>
+
+                <div class="kpi-info">
+                    <p>Ngày kết thúc dữ liệu</p>
+
+                    <h2 id="endDate">
+                        {{ summary.end_date | default("--") }}
+                    </h2>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- STOCK DETAILS -->
+        <section id="stock-details"
+                 class="stock-details-panel">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Stock Details</h2>
+                    <p>Thông tin giao dịch mới nhất</p>
+                </div>
+
+                <div class="stock-symbol-badge"
+                     id="detailSymbol">
+                    {{ selected_stock }}
+                </div>
+
+            </div>
+
+
+            <div class="stock-details-grid">
+
+                <div class="detail-card">
+
+                    <div class="detail-label">
+                        Giá đóng cửa
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailClose">
+                        {{ latest.close | default("--") }}
+                    </div>
+
+                    <div class="detail-unit">
+                        VND
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <div class="detail-label">
+                        Giá mở cửa
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailOpen">
+                        {{ latest.open | default("--") }}
+                    </div>
+
+                    <div class="detail-unit">
+                        VND
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <div class="detail-label">
+                        Giá cao nhất
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailHigh">
+                        {{ latest.high | default("--") }}
+                    </div>
+
+                    <div class="detail-unit">
+                        VND
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <div class="detail-label">
+                        Giá thấp nhất
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailLow">
+                        {{ latest.low | default("--") }}
+                    </div>
+
+                    <div class="detail-unit">
+                        VND
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <div class="detail-label">
+                        Khối lượng giao dịch
+                    </div>
+
+                    <div class="detail-value"
+                         id="detailVolume">
+                        {{ latest.volume | default("--") }}
+                    </div>
+
+                    <div class="detail-unit">
+                        Cổ phiếu
+                    </div>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <div class="detail-label">
+                        Ngày giao dịch
+                    </div>
+
+                    <div class="detail-value detail-date"
+                         id="detailDate">
+                        {{ latest.date | default("--") }}
+                    </div>
+
+                    <div class="detail-unit">
+                        Ngày dữ liệu mới nhất
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PRICE CHART -->
+        <section id="price-chart-section"
+                 class="chart-panel">
+
+            <div class="chart-header">
+
+                <div>
+                    <h2>Price Analysis</h2>
+
+                    <p>
+                        Giá đóng cửa, MA5 và MA20
+                    </p>
+                </div>
+
+                <div class="chart-filter">
+
+                    <label for="timeFilter">
+                        Khoảng thời gian:
+                    </label>
+
+                    <select id="timeFilter">
+
+                        <option value="1m">
+                            1 tháng
+                        </option>
+
+                        <option value="3m">
+                            3 tháng
+                        </option>
+
+                        <option value="6m">
+                            6 tháng
+                        </option>
+
+                        <option value="1y">
+                            1 năm
+                        </option>
+
+                        <option value="all" selected>
+                            Toàn bộ dữ liệu
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+
+        </section>
+
+
+        <!-- VOLUME CHART -->
+        <section id="volume-chart-section"
+                 class="chart-panel">
+
+            <div class="chart-header">
+
+                <div>
+                    <h2>Volume Analysis</h2>
+
+                    <p>
+                        Khối lượng giao dịch theo thời gian
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="chart-container">
+                <canvas id="volumeChart"></canvas>
+            </div>
+
+        </section>
+
+
+        <!-- STOCK LIST -->
+        <section class="chart-panel">
+
+            <div class="chart-header">
+
+                <div>
+                    <h2>Danh sách cổ phiếu</h2>
+
+                    <p>
+                        8 cổ phiếu ngành ngân hàng
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="stock-list">
+
+                {% for stock in stocks %}
+
+                <div class="stock-list-item
+                    {% if stock == selected_stock %}active{% endif %}"
+                    data-symbol="{{ stock }}">
+
+                    <div class="stock-list-symbol">
+                        {{ stock }}
+                    </div>
+
+                    <div class="stock-list-description">
+                        Ngân hàng
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MACHINE LEARNING PREDICTION
+        ================================================= -->
+
+        <section id="ml-prediction-section"
+                 class="chart-panel">
+
+            <div class="chart-header">
+
+                <div>
+                    <h2>🤖 Machine Learning Prediction</h2>
+
+                    <p>
+                        Logistic Regression dự đoán xu hướng
+                        phiên tiếp theo
+                    </p>
+                </div>
+
+                <button id="refreshPredictionBtn"
+                        class="refresh-btn">
+                    ↻ Làm mới
+                </button>
+
+            </div>
+
+
+            <!-- MODEL INFORMATION -->
+            <div class="prediction-info-grid">
+
+                <div class="prediction-info-card">
+
+                    <span>Model</span>
+
+                    <strong id="predictionModel">
+                        Logistic Regression
+                    </strong>
+
+                </div>
+
+
+                <div class="prediction-info-card">
+
+                    <span>Threshold</span>
+
+                    <strong id="predictionThreshold">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="prediction-info-card">
+
+                    <span>Ngày dữ liệu</span>
+
+                    <strong id="predictionDate">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="prediction-info-card">
+
+                    <span>Trạng thái dữ liệu</span>
+
+                    <strong id="predictionFreshness">
+                        Đang tải...
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- DATA WARNING -->
+            <div id="predictionWarning"
+                 class="prediction-warning hidden">
+
+                ⚠️ Dữ liệu hiện tại đã cũ.
+                Dự đoán chỉ phản ánh dữ liệu lịch sử
+                đang có trong hệ thống.
+
+            </div>
+
+
+            <!-- LOADING -->
+            <div id="predictionLoading"
+                 class="prediction-loading">
+
+                Đang tính toán dự đoán...
+
+            </div>
+
+
+            <!-- ERROR -->
+            <div id="predictionError"
+                 class="prediction-error hidden">
+
+            </div>
+
+
+            <!-- TABLE -->
+            <div class="prediction-table-wrapper">
+
+                <table class="prediction-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Hạng</th>
+                            <th>Mã</th>
+                            <th>Giá</th>
+                            <th>Xác suất tăng</th>
+                            <th>Tín hiệu</th>
+                            <th>RSI</th>
+                            <th>MACD</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="predictionTableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- DISCLAIMER -->
+            <div class="prediction-disclaimer">
+
+                <strong>⚠️ Lưu ý:</strong>
+
+                <p>
+                    Xác suất do mô hình Machine Learning tính toán
+                    dựa trên dữ liệu lịch sử. Kết quả không đảm bảo
+                    giá cổ phiếu tăng hoặc giảm và không phải
+                    khuyến nghị đầu tư.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             STOCK ANALYSIS
+        ================================================= -->
+
+        <section id="stock-analysis-panel"
+                 class="chart-panel stock-analysis-panel hidden">
+
+            <div class="chart-header">
+
+                <div>
+                    <h2 id="analysisStockTitle">
+                        Phân tích cổ phiếu
+                    </h2>
+
+                    <p>
+                        Phân tích các chỉ báo kỹ thuật
+                        và tín hiệu Machine Learning
+                    </p>
+                </div>
+
+                <span id="analysisSignalBadge"
+                      class="signal-badge">
+                </span>
+
+            </div>
+
+
+            <!-- PROBABILITY -->
+            <div class="analysis-probability">
+
+                <div>
+
+                    <span>
+                        Xác suất tăng của mô hình
+                    </span>
+
+                    <strong id="analysisProbability">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Ngưỡng mô hình
+                    </span>
+
+                    <strong id="analysisThreshold">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- TECHNICAL INDICATORS -->
+            <div class="analysis-grid">
+
+                <div class="analysis-card">
+
+                    <h4>RSI</h4>
+
+                    <strong id="analysisRSI">
+                        --
+                    </strong>
+
+                    <p id="analysisRSIText">
+                        --
+                    </p>
+
+                </div>
+
+
+                <div class="analysis-card">
+
+                    <h4>Xu hướng MA</h4>
+
+                    <strong id="analysisMATrend">
+                        --
+                    </strong>
+
+                    <p id="analysisMAText">
+                        --
+                    </p>
+
+                </div>
+
+
+                <div class="analysis-card">
+
+                    <h4>MACD</h4>
+
+                    <strong id="analysisMACD">
+                        --
+                    </strong>
+
+                    <p id="analysisMACDText">
+                        --
+                    </p>
+
+                </div>
+
+
+                <div class="analysis-card">
+
+                    <h4>Khối lượng</h4>
+
+                    <strong id="analysisVolume">
+                        --
+                    </strong>
+
+                    <p id="analysisVolumeText">
+                        --
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- DECISION SUPPORT -->
+            <div id="decision-support-section"
+                 class="decision-support">
+
+                <div class="decision-score-header">
+
+                    <div>
+
+                        <h3>
+                            Decision Support Score
+                        </h3>
+
+                        <p>
+                            Điểm tổng hợp từ Machine Learning
+                            và chỉ báo kỹ thuật
+                        </p>
+
+                    </div>
+
+
+                    <div class="decision-score-circle">
+
+                        <strong id="decisionScore">
+                            --
+                        </strong>
+
+                        <span>/100</span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="decision-status">
+
+                    <span id="decisionStatus"
+                          class="decision-status-badge">
+
+                        Đang đánh giá
+
+                    </span>
+
+                    <span id="decisionRisk">
+                        Rủi ro: --
+                    </span>
+
+                </div>
+
+
+                <div class="decision-score-bar">
+
+                    <div id="decisionScoreFill">
+                    </div>
+
+                </div>
+
+
+                <!-- SCORE BREAKDOWN -->
+                <div class="decision-breakdown">
+
+                    <div class="decision-factor">
+
+                        <span>Machine Learning</span>
+
+                        <strong id="scoreML">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="decision-factor">
+
+                        <span>Xu hướng MA</span>
+
+                        <strong id="scoreMA">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="decision-factor">
+
+                        <span>MACD</span>
+
+                        <strong id="scoreMACD">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="decision-factor">
+
+                        <span>RSI</span>
+
+                        <strong id="scoreRSI">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="decision-factor">
+
+                        <span>Volume</span>
+
+                        <strong id="scoreVolume">
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <div class="decision-factor">
+
+                        <span>Dữ liệu</span>
+
+                        <strong id="scoreFreshness">
+                            --
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DECISION EXPLANATION -->
+                <div class="decision-recommendation">
+
+                    <h4>🧠 Đánh giá hệ thống</h4>
+
+                    <p id="decisionExplanation">
+                        --
+                    </p>
+
+                </div>
+
+
+                <!-- RISK -->
+                <div class="decision-risk-box">
+
+                    <h4>
+                        ⚠️ Các yếu tố rủi ro
+                    </h4>
+
+                    <ul id="decisionRiskList">
+
+                    </ul>
+
+                </div>
+
+
+                <!-- SUMMARY -->
+                <div class="analysis-summary">
+
+                    <h4>
+                        📋 Tổng hợp phân tích
+                    </h4>
+
+                    <ul id="analysisSummaryList">
+
+                    </ul>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- DISCLAIMER -->
+            <div class="prediction-disclaimer">
+
+                <strong>⚠️ Disclaimer:</strong>
+
+                <p>
+                    Decision Support Score là điểm đánh giá
+                    heuristic dựa trên các yếu tố kỹ thuật.
+                    Đây không phải xác suất sinh lời,
+                    không phải khuyến nghị mua bán
+                    và không đảm bảo kết quả đầu tư.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+
+            <p>
+                Vietnam Stock Market Analysis & Machine Learning
+            </p>
+
+            <p>
+                Data source: Historical stock market dataset
+            </p>
+
+            <p>
+                Research and decision-support purposes only
+            </p>
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<!-- DATA FROM FLASK -->
+<script>
+
+    window.initialStockData =
+        {{ stock_data | tojson }};
+
+    window.initialStockSymbol =
+        {{ selected_stock | tojson }};
+
+    window.initialLatestStock =
+        {{ latest | tojson }};
+
+</script>
+
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+</body>
+</html>
